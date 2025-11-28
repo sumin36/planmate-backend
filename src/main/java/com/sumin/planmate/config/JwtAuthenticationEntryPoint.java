@@ -26,7 +26,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ErrorResponse error = ErrorResponse.of(
                 401,
                 "UNAUTHORIZED",
-                "유효하지 않은 토큰입니다.",
+                "토큰이 없거나 유효하지 않습니다.",
                 request.getRequestURI(),
                 LocalDateTime.now()
         );
