@@ -37,3 +37,6 @@ out/
 .vscode/
 
 *.jar
+
+# Spring Boot config
+application*.yml
