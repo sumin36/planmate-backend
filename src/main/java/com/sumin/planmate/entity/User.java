@@ -38,11 +38,12 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<DailyTask> dailyTasks = new ArrayList<>();
 
-    public void changeUserInfo(String nickname, String email, Gender gender, LocalDate birthDate) {
+    public User update(String nickname, String email, Gender gender, LocalDate birthDate) {
         if (nickname != null) this.nickname = nickname;
         if (email != null) this.email = email;
         if (gender != null) this.gender = gender;
         if (birthDate != null) this.birthDate = birthDate;
+        return this;
     }
 
     public void changePassword(String password) {
@@ -52,15 +53,5 @@ public class User extends BaseEntity {
     public void addDailyTask(DailyTask dailyTask) {
         this.dailyTasks.add(dailyTask);
         dailyTask.setUser(this);
-    }
-
-    @Builder
-    private User(String loginId, String password, String nickname, String email, Gender gender, LocalDate birthDate) {
-        this.loginId = loginId;
-        this.password = password;
-        this.nickname = nickname;
-        this.email = email;
-        this.gender = gender;
-        this.birthDate = birthDate;
     }
 }

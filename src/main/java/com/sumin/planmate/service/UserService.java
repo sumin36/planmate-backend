@@ -19,23 +19,17 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     // 유저 정보 수정
-    public void updateUserInfo(String loginId, UserUpdateDto dto){
+    public UserInfoDto updateUserInfo(String loginId, UserUpdateDto dto){
         User user = getUser(loginId);
-        user.changeUserInfo(dto.getNickname(), dto.getEmail(), dto.getGender(), dto.getBirthDate());
+        User updated = user.update(dto.getNickname(), dto.getEmail(), dto.getGender(), dto.getBirthDate());
+        return toDto(updated);
     }
 
     // 유저 정보 조회
     @Transactional(readOnly = true)
     public UserInfoDto getUserInfo(String loginId){
         User user = getUser(loginId);
-
-        return UserInfoDto.builder()
-                .loginId(loginId)
-                .nickname(user.getNickname())
-                .email(user.getEmail())
-                .gender(user.getGender())
-                .birthDate(user.getBirthDate())
-                .build();
+        return toDto(user);
     }
 
     // 비밀번호 변경
@@ -51,5 +45,15 @@ public class UserService {
     private User getUser(String loginId) {
         return userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
+    }
+
+    private UserInfoDto toDto(User user) {
+        return UserInfoDto.builder()
+                .loginId(user.getLoginId())
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .gender(user.getGender())
+                .birthDate(user.getBirthDate())
+                .build();
     }
 }
