@@ -38,6 +38,9 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<DailyTask> dailyTasks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Routine> routines = new ArrayList<>();
+
     public User update(String nickname, String email, Gender gender, LocalDate birthDate) {
         if (nickname != null) this.nickname = nickname;
         if (email != null) this.email = email;
@@ -53,5 +56,10 @@ public class User extends BaseEntity {
     public void addDailyTask(DailyTask dailyTask) {
         this.dailyTasks.add(dailyTask);
         dailyTask.setUser(this);
+    }
+
+    public void addRoutine(Routine routine) {
+        this.routines.add(routine);
+        routine.setUser(this);
     }
 }
