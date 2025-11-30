@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 /**
  * 사용자 인증은 되었지만 권한(role)이 없을 경우(403) 호출 -> 인가 실패
@@ -23,12 +22,11 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        ErrorResponse error = ErrorResponse.of(
+        ErrorResponse error = ErrorResponse.generalError(
                 403,
                 "FORBIDDEN",
                 "접근 권한이 없습니다.",
-                request.getRequestURI(),
-                LocalDateTime.now()
+                request.getRequestURI()
         );
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);

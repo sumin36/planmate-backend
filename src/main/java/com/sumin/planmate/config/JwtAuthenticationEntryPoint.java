@@ -23,12 +23,11 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
 
-        ErrorResponse error = ErrorResponse.of(
+        ErrorResponse error = ErrorResponse.generalError(
                 401,
                 "UNAUTHORIZED",
                 "토큰이 없거나 유효하지 않습니다.",
-                request.getRequestURI(),
-                LocalDateTime.now()
+                request.getRequestURI()
         );
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
