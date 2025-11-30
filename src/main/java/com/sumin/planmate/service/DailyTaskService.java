@@ -2,6 +2,7 @@ package com.sumin.planmate.service;
 
 import com.sumin.planmate.dto.dailytask.DailyTaskDto;
 import com.sumin.planmate.dto.dailytask.DailyTaskRequestDto;
+import com.sumin.planmate.dto.dailytask.DailyTaskUpdateDto;
 import com.sumin.planmate.entity.DailyTask;
 import com.sumin.planmate.entity.User;
 import com.sumin.planmate.exception.NotFoundException;
@@ -25,7 +26,8 @@ public class DailyTaskService {
     // Todo 추가
     public void addDailyTask(String loginId, DailyTaskRequestDto dto){
         User user = getUser(loginId);
-        DailyTask task = DailyTask.builder().title(dto.getTitle())
+        DailyTask task = DailyTask.builder()
+                .title(dto.getTitle())
                 .description(dto.getDescription())
                 .date(dto.getDate())
                 .isCompleted(false)
@@ -36,9 +38,14 @@ public class DailyTaskService {
     // 날짜별 Todo 조회
     @Transactional(readOnly = true)
     public List<DailyTaskDto> getDailyTasksByDate(String loginId, LocalDate date){
-        User user = getUser(loginId);
-        List<DailyTask> tasks = dailyTaskRepository.findByUser_LoginIdAndDate(user.getLoginId(), date);
+        List<DailyTask> tasks = dailyTaskRepository.findByUser_LoginIdAndDate(loginId, date);
         return tasks.stream().map(this::toDto).toList();
+    }
+
+    // Todo 수정
+    public DailyTaskDto updateDailyTask(Long taskId, DailyTaskUpdateDto dto){
+        DailyTask task = getDailyTask(taskId);
+        return toDto(task.update(dto.getTitle(), dto.getDescription(), dto.getDate()));
     }
 
     // Todo 상태 변경(완료, 취소)
@@ -53,12 +60,6 @@ public class DailyTaskService {
         dailyTaskRepository.delete(task);
     }
 
-    // Todo 수정
-    public DailyTaskDto updateDailyTask(Long taskId, DailyTaskRequestDto dto){
-        DailyTask task = getDailyTask(taskId);
-        return toDto(task.update(dto.getTitle(), dto.getDescription(), dto.getDate()));
-    }
-
     private User getUser(String loginId) {
         return userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
@@ -66,7 +67,7 @@ public class DailyTaskService {
 
     private DailyTask getDailyTask(Long taskId) {
         return dailyTaskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException("일정이 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 일정이 존재하지 않습니다."));
     }
 
     private DailyTaskDto toDto(DailyTask dailyTask) {
