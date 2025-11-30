@@ -25,12 +25,10 @@ public class RoutineRequestDto {
     private RepeatType repeatType;
     private String repeatDescription;
 
-    @Min(0)
-    @Max(23)
+    @Min(0) @Max(23)
     private Integer hour;
 
-    @Min(0)
-    @Max(59)
+    @Min(0) @Max(59)
     private Integer minute;
 }
 
