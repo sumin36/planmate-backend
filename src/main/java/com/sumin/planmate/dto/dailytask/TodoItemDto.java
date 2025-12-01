@@ -1,12 +1,13 @@
 package com.sumin.planmate.dto.dailytask;
 
+import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
-
 @Getter
-public class DailyTaskUpdateDto {
+@Builder
+public class TodoItemDto {
+    private Long id;
     private String title;
     private String description;
-    private LocalDate date;
+    private boolean isCompleted;
 }

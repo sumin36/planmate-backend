@@ -2,12 +2,15 @@ package com.sumin.planmate.dto.dailytask;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Getter
-public class DailyTaskRequestDto {
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class TodoItemRequestDto {
 
     @NotBlank
     private String title;

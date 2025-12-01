@@ -4,13 +4,11 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Builder
 public class DailyTaskDto {
-    private Long taskId;
-    private String title;
-    private String description;
     private LocalDate date;
-    private boolean isCompleted;
+    private List<TodoItemDto> todoItems;
 }

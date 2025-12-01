@@ -1,10 +1,11 @@
 package com.sumin.planmate.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -14,30 +15,25 @@ import java.time.LocalDate;
 public class DailyTask extends BaseEntity{
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "dailytask_id")
+    @Column(name = "daily_task_id")
     private Long id;
-
-    @NotBlank
-    private String title;
-    private String description;
 
     @NotNull
     private LocalDate date;
-    private Boolean isCompleted;
 
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
 
-    public void setComplete(boolean complete) {
-        this.isCompleted = !complete;
-    }
+    @Builder.Default
+    @OneToMany(mappedBy = "dailyTask", cascade = CascadeType.ALL)
+    private List<TodoItem> todoItems = new ArrayList<>();
 
-    public DailyTask update(String title, String description, LocalDate date) {
-        if(title != null) this.title = title;
-        if(description != null) this.description = description;
-        if(date != null) this.date = date;
-        return this;
+    public void addTodoItem(TodoItem todoItem){
+        this.todoItems.add(todoItem);
+        if(todoItem.getDailyTask() != this) {
+            todoItem.setDailyTask(this);
+        }
     }
 }
