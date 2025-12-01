@@ -39,12 +39,6 @@ public class RoutineController {
         return new ApiResponse<>(200, "루틴 업데이트 완료", updated);
     }
 
-    @PatchMapping("/{routineId}/toggle")
-    private ApiResponse<String> toggleRoutine(@PathVariable Long routineId){
-        routineService.toggleActive(routineId);
-        return new ApiResponse<>(200, "루틴 활성 여부 업데이트 완료", null);
-    }
-
     @DeleteMapping("/{routineId}")
     public ApiResponse<String> deleteDailyTask(@PathVariable Long routineId) {
         routineService.deleteRoutine(routineId);

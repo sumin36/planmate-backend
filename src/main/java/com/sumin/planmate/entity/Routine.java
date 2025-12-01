@@ -61,10 +61,6 @@ public class Routine extends BaseEntity {
         return this;
     }
 
-    public void setActive(boolean isActive) {
-        this.isActive = !isActive;
-    }
-
     public void validateDates() {
         if(this.startDate.isAfter(this.endDate)) {
             throw new InvalidRoutineException("시작 날짜는 종료 날짜보다 앞서야 합니다.");
