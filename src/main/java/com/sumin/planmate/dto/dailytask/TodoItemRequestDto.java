@@ -7,15 +7,16 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TodoItemRequestDto {
 
     @NotBlank
     private String title;
-    private String description;
 
     @NotNull
     private LocalDate date;
+
+    public static TodoItemRequestDto create(String title, LocalDate date){
+        return new TodoItemRequestDto(title, date);
+    }
 }

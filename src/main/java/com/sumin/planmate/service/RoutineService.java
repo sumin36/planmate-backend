@@ -37,7 +37,6 @@ public class RoutineService {
         Routine routine = createRoutine(dto);
         user.addRoutine(routine);
 
-        // 루틴 설정 기간에 해당하는 데일리 태스크에 TodoItem 추가
         createTodoItemsForRoutine(loginId, routine);
     }
 
@@ -51,7 +50,10 @@ public class RoutineService {
     // 루틴 수정
     public RoutineDto updateRoutine(Long routineId, RoutineUpdateDto dto) {
         Routine routine = getRoutine(routineId);
-        Routine updated = routine.updateRoutine(
+
+        todoItemRepository.deleteByRoutineId(routineId); // 기존 루틴 기반 TodoItem 삭제
+
+        routine.updateRoutine(
                 dto.getTitle(),
                 dto.getStartDate(),
                 dto.getEndDate(),
@@ -61,11 +63,8 @@ public class RoutineService {
                 dto.getMinute()
         );
 
-        List<TodoItem> items = todoItemRepository.findByRoutineId(routineId);
-        removeInvalidTodoItems(items, updated); // 수정된 기간에 해당하지 않는 TodoItem 삭제
-        // Todo: TodoItem 자체를 수정 추가하지 말고
-        createTodoItemsForRoutine(updated.getUser().getLoginId(), updated); // 수정된 기간에 해당하는 TodoItem 추가
-        return toDto(updated);
+        createTodoItemsForRoutine(routine.getUser().getLoginId(), routine);
+        return toDto(routine);
     }
 
     // 루틴 삭제
@@ -93,15 +92,13 @@ public class RoutineService {
         return routine;
     }
 
+    // 루틴 설정 기간에 맞게 데일리 태스크에 TodoItem 추가
     private void createTodoItemsForRoutine(String loginId, Routine routine) {
         LocalDate date = routine.getStartDate();
         while (!date.isAfter(routine.getEndDate())) {
             if (shouldCreateDailyTask(routine, date)) {
                 dailyTaskService.addTodoItem(loginId,
-                        TodoItemRequestDto.builder()
-                                .title(routine.getTitle())
-                                .date(date)
-                                .build());
+                        TodoItemRequestDto.create(routine.getTitle(), date));
             }
             date = date.plusDays(1);
         }
@@ -122,18 +119,6 @@ public class RoutineService {
                 return days.contains(date.getDayOfMonth());
             default:
                 return false;
-        }
-    }
-
-    private void removeInvalidTodoItems(List<TodoItem> items, Routine routine) {
-        LocalDate start = routine.getStartDate();
-        LocalDate end = routine.getEndDate();
-
-        for (TodoItem item : items) {
-            LocalDate date = item.getDailyTask().getDate();
-            if(date.isBefore(start) || date.isAfter(end)) {
-                todoItemRepository.delete(item);
-            }
         }
     }
 

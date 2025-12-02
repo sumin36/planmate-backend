@@ -41,7 +41,6 @@ public class DailyTaskService {
 
         TodoItem todoItem = TodoItem.builder()
                 .title(dto.getTitle())
-                .description(dto.getDescription())
                 .isCompleted(false)
                 .build();
 
@@ -89,12 +88,12 @@ public class DailyTaskService {
 
     // Todo: N + 1 문제 해결 하기
     private DailyTaskDto toDto(DailyTask dailyTask) {
-        return DailyTaskDto.builder()
-                .date(dailyTask.getDate())
-                .todoItems(dailyTask.getTodoItems().stream()
+        return DailyTaskDto.create(
+                dailyTask.getDate(),
+                dailyTask.getTodoItems().stream()
                         .map(this::toDto)
-                        .toList())
-                .build();
+                        .toList()
+        );
     }
 
     private TodoItemDto toDto(TodoItem todoItem){

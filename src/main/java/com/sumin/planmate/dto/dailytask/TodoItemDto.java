@@ -10,4 +10,5 @@ public class TodoItemDto {
     private String title;
     private String description;
     private boolean isCompleted;
+    private Long routineId;
 }

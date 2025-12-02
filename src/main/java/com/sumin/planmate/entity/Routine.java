@@ -42,8 +42,8 @@ public class Routine extends BaseEntity {
     @JoinColumn(name = "user_id")
     User user;
 
-    public Routine updateRoutine (String title, LocalDate startDate, LocalDate endDate, RepeatType repeatType,
-                   String repeatDescription, Integer hour, Integer minute) {
+    public void updateRoutine (String title, LocalDate startDate, LocalDate endDate, RepeatType repeatType,
+                               String repeatDescription, Integer hour, Integer minute) {
         if(title != null) this.title = title;
         if(startDate != null) this.startDate = startDate;
         if(endDate != null) this.endDate = endDate;
@@ -58,7 +58,6 @@ public class Routine extends BaseEntity {
         validateDates();
         validateRepeat();
 
-        return this;
     }
 
     public void validateDates() {
