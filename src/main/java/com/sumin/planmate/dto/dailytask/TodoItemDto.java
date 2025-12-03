@@ -8,7 +8,7 @@ import lombok.Getter;
 public class TodoItemDto {
     private Long id;
     private String title;
-    private String description;
+    private String memo;
     private boolean isCompleted;
     private Long routineId;
 }
