@@ -19,13 +19,18 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String loginId;
+    private String username;
 
     @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)
-    private String nickname;
+    private String role;
+
+    private String refreshToken;
+
+    @Column(nullable = false)
+    private String fullName;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -41,12 +46,15 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Routine> routines = new ArrayList<>();
 
-    public User update(String nickname, String email, Gender gender, LocalDate birthDate) {
-        if (nickname != null) this.nickname = nickname;
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void updateUserInfo(String fullName, String email, Gender gender, LocalDate birthDate) {
+        if (fullName != null) this.fullName = fullName;
         if (email != null) this.email = email;
         if (gender != null) this.gender = gender;
         if (birthDate != null) this.birthDate = birthDate;
-        return this;
     }
 
     public void changePassword(String password) {

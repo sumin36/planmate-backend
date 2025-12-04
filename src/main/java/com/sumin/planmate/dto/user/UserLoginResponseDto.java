@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class UserLoginResponseDto {
+    private String username;
     private String accessToken;
     private String refreshToken;
-    private String nickname;
+    private String fullName;
 }

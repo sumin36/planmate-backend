@@ -13,14 +13,14 @@ public class UserSignupDto {
 
     @NotBlank
     @Size(min = 3, max = 20)
-    private String loginId;
+    private String username;
 
     @NotBlank
     @Size(min = 6)
     private String password;
 
     @NotBlank
-    private String nickname;
+    private String fullName;
 
     @NotBlank
     @Email

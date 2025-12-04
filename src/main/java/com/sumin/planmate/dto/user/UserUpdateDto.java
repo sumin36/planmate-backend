@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Getter
 public class UserUpdateDto {
-    private String nickname;
+    private String fullName;
 
     @Email
     private String email;
