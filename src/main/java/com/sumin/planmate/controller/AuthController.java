@@ -15,9 +15,9 @@ public class AuthController {
     public final AuthService authService;
 
     @PostMapping("/signup")
-    public ApiResponse<UserSignUpResponseDto> signup(@Valid @RequestBody UserSignupDto dto){
-        UserSignUpResponseDto response = authService.signup(dto);
-        return new ApiResponse<>(200, "회원가입 성공", response);
+    public ApiResponse<Void> signup(@Valid @RequestBody UserSignupDto dto){
+        authService.signup(dto);
+        return new ApiResponse<>(200, "회원가입 성공", null);
     }
 
     @PostMapping("/login")
@@ -27,8 +27,8 @@ public class AuthController {
     }
 
     @PostMapping("/token/reissue")
-    public ApiResponse<String> reissue(@RequestParam String refreshToken){
-        String newAccessToken = authService.reissueAccessToken(refreshToken);
-        return new ApiResponse<>(200, "토큰 재발급 성공", newAccessToken);
+    public ApiResponse<UserLoginResponseDto> reissue(@RequestParam String refreshToken){
+        UserLoginResponseDto response = authService.reissueAccessToken(refreshToken);
+        return new ApiResponse<>(200, "토큰 재발급 성공", response);
     }
 }
