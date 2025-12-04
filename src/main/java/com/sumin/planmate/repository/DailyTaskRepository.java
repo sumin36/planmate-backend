@@ -7,5 +7,5 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface DailyTaskRepository extends JpaRepository<DailyTask, Long> {
-    Optional<DailyTask> findByUserLoginIdAndDate(String loginId, LocalDate date);
+    Optional<DailyTask> findByUserIdAndDate(Long userId, LocalDate date);
 }

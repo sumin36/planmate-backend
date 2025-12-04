@@ -9,7 +9,9 @@ import com.sumin.planmate.exception.NotFoundException;
 import com.sumin.planmate.repository.RoutineRepository;
 import com.sumin.planmate.repository.TodoItemRepository;
 import com.sumin.planmate.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,32 +27,34 @@ import java.util.Locale;
 @Transactional
 public class RoutineService {
 
-    private final UserRepository userRepository;
     private final RoutineRepository routineRepository;
     private final DailyTaskService dailyTaskService;
     private final TodoItemRepository todoItemRepository;
+    private final UserRepository userRepository;
+    private final EntityManager em;
 
     // 루틴 추가
-    public void addRoutine(String loginId, RoutineRequestDto dto) {
-        User user = getUser(loginId);
+    public void addRoutine(RoutineRequestDto dto, Long userId) {
+        User user = getUser(userId);
 
         Routine routine = createRoutine(dto);
         user.addRoutine(routine);
+        em.flush();
 
-        createTodoItemsForRoutine(loginId, routine);
+        createTodoItemsForRoutine(userId, routine);
     }
 
     // 루틴 리스트 조회
     @Transactional(readOnly = true)
-    public List<RoutineDto> getRoutines(String loginId) {
-        List<Routine> routines = routineRepository.findByUserLoginId(loginId);
+    public List<RoutineDto> getRoutines(Long userId) {
+        List<Routine> routines = routineRepository.findByUserId(userId);
         return routines.stream().map(this::toDto).toList();
     }
 
     // 루틴 수정
-    public RoutineDto updateRoutine(Long routineId, RoutineUpdateDto dto) {
+    public RoutineDto updateRoutine(Long routineId, RoutineUpdateDto dto, Long userId) {
         Routine routine = getRoutine(routineId);
-
+        validateOwnership(userId, routine);
         todoItemRepository.deleteByRoutineId(routineId); // 기존 루틴 기반 TodoItem 삭제
 
         routine.updateRoutine(
@@ -63,13 +67,14 @@ public class RoutineService {
                 dto.getMinute()
         );
 
-        createTodoItemsForRoutine(routine.getUser().getLoginId(), routine);
+        createTodoItemsForRoutine(routine.getUser().getId(), routine);
         return toDto(routine);
     }
 
     // 루틴 삭제
-    public void deleteRoutine(Long routineId) {
+    public void deleteRoutine(Long routineId, Long userId) {
         Routine routine = getRoutine(routineId);
+        validateOwnership(userId, routine);
         todoItemRepository.deleteFutureTodoItems(routineId, LocalDate.now());
         routineRepository.delete(routine);
     }
@@ -93,12 +98,12 @@ public class RoutineService {
     }
 
     // 루틴 설정 기간에 맞게 데일리 태스크에 TodoItem 추가
-    private void createTodoItemsForRoutine(String loginId, Routine routine) {
+    private void createTodoItemsForRoutine(Long userId, Routine routine) {
         LocalDate date = routine.getStartDate();
         while (!date.isAfter(routine.getEndDate())) {
             if (shouldCreateDailyTask(routine, date)) {
-                dailyTaskService.addTodoItem(loginId,
-                        TodoItemRequestDto.create(routine.getTitle(), date));
+                dailyTaskService.addTodoItem
+                        (TodoItemRequestDto.create(routine.getTitle(), date), routine.getId(), userId);
             }
             date = date.plusDays(1);
         }
@@ -122,14 +127,20 @@ public class RoutineService {
         }
     }
 
-    private User getUser(String loginId) {
-        return userRepository.findByLoginId(loginId)
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
     }
 
     private Routine getRoutine(Long routineId) {
         return routineRepository.findById(routineId)
                 .orElseThrow(() -> new NotFoundException("해당 루틴이 존재하지 않습니다."));
+    }
+
+    private void validateOwnership(Long userId, Routine routine) {
+        if(!routine.getUser().getId().equals(userId)){
+            throw new AccessDeniedException("접근 권한이 없습니다.");
+        }
     }
 
     private RoutineDto toDto(Routine routine) {

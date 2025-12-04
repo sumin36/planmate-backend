@@ -7,6 +7,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TodoItemRequestDto {
 

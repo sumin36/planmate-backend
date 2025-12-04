@@ -3,6 +3,7 @@ package com.sumin.planmate.controller;
 import com.sumin.planmate.dto.routine.RoutineDto;
 import com.sumin.planmate.dto.routine.RoutineRequestDto;
 import com.sumin.planmate.dto.routine.RoutineUpdateDto;
+import com.sumin.planmate.dto.user.CustomUserDetails;
 import com.sumin.planmate.service.RoutineService;
 import com.sumin.planmate.util.ApiResponse;
 import jakarta.validation.Valid;
@@ -20,28 +21,30 @@ public class RoutineController {
     private final RoutineService routineService;
 
     @PostMapping
-    public ApiResponse<String> createRoutine(@AuthenticationPrincipal String loginId,
-                                             @Valid @RequestBody RoutineRequestDto dto) {
-        routineService.addRoutine(loginId, dto);
+    public ApiResponse<String> createRoutine(@Valid @RequestBody RoutineRequestDto dto,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        routineService.addRoutine(dto, userDetails.getUserId());
         return new ApiResponse<>(200, "루틴 추가 완료", null);
     }
 
     @GetMapping
-    public ApiResponse<List<RoutineDto>> getRoutines(@AuthenticationPrincipal String loginId) {
-        List<RoutineDto> routines = routineService.getRoutines(loginId);
+    public ApiResponse<List<RoutineDto>> getRoutines(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<RoutineDto> routines = routineService.getRoutines(userDetails.getUserId());
         return new ApiResponse<>(200, "루틴 리스트 조회 완료", routines);
     }
 
     @PutMapping("/{routineId}")
     public ApiResponse<RoutineDto> updateDailyTask(@PathVariable Long routineId,
-                                                     @Valid @RequestBody RoutineUpdateDto dto){
-        RoutineDto updated = routineService.updateRoutine(routineId, dto);
+                                                   @Valid @RequestBody RoutineUpdateDto dto,
+                                                   @AuthenticationPrincipal CustomUserDetails userDetails){
+        RoutineDto updated = routineService.updateRoutine(routineId, dto, userDetails.getUserId());
         return new ApiResponse<>(200, "루틴 업데이트 완료", updated);
     }
 
     @DeleteMapping("/{routineId}")
-    public ApiResponse<String> deleteDailyTask(@PathVariable Long routineId) {
-        routineService.deleteRoutine(routineId);
+    public ApiResponse<String> deleteDailyTask(@PathVariable Long routineId,
+                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+        routineService.deleteRoutine(routineId, userDetails.getUserId());
         return new ApiResponse<>(200, "루틴 삭제 완료", null);
     }
 }

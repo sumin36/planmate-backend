@@ -12,6 +12,7 @@ import com.sumin.planmate.repository.DailyTaskRepository;
 import com.sumin.planmate.repository.TodoItemRepository;
 import com.sumin.planmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +28,12 @@ public class DailyTaskService {
     private final TodoItemRepository todoItemRepository;
 
     // TodoItem 추가
-    public TodoItemDto addTodoItem(String loginId, TodoItemRequestDto dto){
-        User user = getUser(loginId);
-        DailyTask dailyTask = dailyTaskRepository.findByUserLoginIdAndDate(loginId, dto.getDate())
+    public TodoItemDto addTodoItem(TodoItemRequestDto dto, Long routineId, Long userId){
+        User user = getUser(userId);
+        DailyTask dailyTask = dailyTaskRepository.findByUserIdAndDate(userId, dto.getDate())
                 .orElseGet(() -> {
                     DailyTask newTask = DailyTask.builder()
                             .date(dto.getDate())
-                            .user(user)
                             .build();
                     user.addDailyTask(newTask);
                     return newTask;
@@ -42,6 +42,7 @@ public class DailyTaskService {
         TodoItem todoItem = TodoItem.builder()
                 .title(dto.getTitle())
                 .isCompleted(false)
+                .routineId(routineId)
                 .build();
 
         dailyTask.addTodoItem(todoItem);
@@ -50,43 +51,52 @@ public class DailyTaskService {
 
     // 날짜별 TodoItem 리스트 조회
     @Transactional(readOnly = true)
-    public DailyTaskDto getDailyTasksByDate(String loginId, LocalDate date){
-        DailyTask task = dailyTaskRepository.findByUserLoginIdAndDate(loginId, date)
+    public DailyTaskDto getDailyTasksByDate(LocalDate date, Long userId){
+        DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, date)
                 .orElse(DailyTask.builder().date(date).build());
         return toDto(task);
     }
 
     // TodoItem 수정
-    public TodoItemDto updateDailyTask(Long itemId, TodoItemUpdateDto dto){
-        TodoItem todoItem = getTodoItem(itemId);
-        TodoItem updated = todoItem.update(dto.getTitle(), dto.getDescription());
+    public TodoItemDto updateDailyTask(Long todoItemId, TodoItemUpdateDto dto, Long userId){
+        TodoItem todoItem = getTodoItem(todoItemId);
+        validateOwnership(userId, todoItem);
+        TodoItem updated = todoItem.update(dto.getTitle(), dto.getMemo());
         return toDto(updated);
     }
 
     // TodoItem 상태 변경
-    public TodoItemDto toggleComplete(Long itemId){
-        TodoItem todoItem = getTodoItem(itemId);
+    public TodoItemDto toggleComplete(Long todoItemId, Long userId){
+        TodoItem todoItem = getTodoItem(todoItemId);
+        validateOwnership(userId, todoItem);
         todoItem.setComplete(!todoItem.getIsCompleted());
         return toDto(todoItem);
     }
 
     // TodoItem 삭제
-    public void removeTodoItem(Long itemId){
-        TodoItem todoItem = getTodoItem(itemId);
-        todoItem.remove();
+    public void removeTodoItem(Long todoItemId, Long userId){
+        TodoItem todoItem = getTodoItem(todoItemId);
+        validateOwnership(userId, todoItem);
+        todoItem.remove(); // 연관관계 정리
+        todoItemRepository.deleteById(todoItem.getId());
     }
 
-    private User getUser(String loginId) {
-        return userRepository.findByLoginId(loginId)
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
     }
 
-    private TodoItem getTodoItem(Long itemId) {
-        return todoItemRepository.findById(itemId)
+    private TodoItem getTodoItem(Long todoItemId) {
+        return todoItemRepository.findByIdWithDailyTaskAndUser(todoItemId)
                 .orElseThrow(() -> new NotFoundException("해당 일정이 존재하지 않습니다."));
     }
 
-    // Todo: N + 1 문제 해결 하기
+    private void validateOwnership(Long userId, TodoItem todoItem) {
+        if(!todoItem.getDailyTask().getUser().getId().equals(userId)){
+            throw new AccessDeniedException("접근 권한이 없습니다.");
+        }
+    }
+
     private DailyTaskDto toDto(DailyTask dailyTask) {
         return DailyTaskDto.create(
                 dailyTask.getDate(),
@@ -100,8 +110,9 @@ public class DailyTaskService {
         return TodoItemDto.builder()
                 .id(todoItem.getId())
                 .title(todoItem.getTitle())
-                .description(todoItem.getDescription())
+                .memo(todoItem.getMemo())
                 .isCompleted(todoItem.getIsCompleted())
+                .routineId(todoItem.getRoutineId())
                 .build();
     }
 }

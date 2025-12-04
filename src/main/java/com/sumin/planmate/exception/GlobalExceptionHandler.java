@@ -4,6 +4,7 @@ import com.sumin.planmate.util.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -46,5 +47,11 @@ public class GlobalExceptionHandler {
                 .toList();
         ErrorResponse error = ErrorResponse.validationError(request.getRequestURI(), errors);
         return ResponseEntity.status(HttpServletResponse.SC_BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.generalError(403, "FORBIDDEN", e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpServletResponse.SC_FORBIDDEN).body(error);
     }
 }
