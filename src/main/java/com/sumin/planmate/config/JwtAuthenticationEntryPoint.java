@@ -1,16 +1,15 @@
 package com.sumin.planmate.config;
 
 import com.sumin.planmate.util.ErrorResponse;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 /**
  * 사용자가 인증되지 않았을 경우(401) 호출 -> 인증 실패
@@ -21,7 +20,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
-                         AuthenticationException authException) throws IOException, ServletException {
+                         @NonNull AuthenticationException authException) throws IOException {
 
         ErrorResponse error = ErrorResponse.generalError(
                 401,
