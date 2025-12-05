@@ -24,7 +24,7 @@ public class DailyTaskController {
     @PostMapping
     public ApiResponse<TodoItemDto> createTodoItem(@Valid @RequestBody TodoItemRequestDto dto,
                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
-        TodoItemDto task = dailyTaskService.addTodoItem(dto, null, userDetails.getUserId());
+        TodoItemDto task = dailyTaskService.addSingleTodoItem(dto, userDetails.getUserId());
         return new ApiResponse<>(200, "task 추가 완료", task);
     }
 

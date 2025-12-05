@@ -41,7 +41,7 @@ public class UserService {
         user.changePassword(passwordEncoder.encode(dto.getNewPassword()));
     }
 
-    private User getUser(Long userId) {
+    public User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
     }

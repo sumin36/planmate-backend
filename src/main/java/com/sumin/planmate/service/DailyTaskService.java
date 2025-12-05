@@ -10,35 +10,52 @@ import com.sumin.planmate.entity.User;
 import com.sumin.planmate.exception.NotFoundException;
 import com.sumin.planmate.repository.DailyTaskRepository;
 import com.sumin.planmate.repository.TodoItemRepository;
-import com.sumin.planmate.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class DailyTaskService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final DailyTaskRepository dailyTaskRepository;
     private final TodoItemRepository todoItemRepository;
 
-    // TodoItem 추가
-    public TodoItemDto addTodoItem(TodoItemRequestDto dto, Long routineId, Long userId){
-        User user = getUser(userId);
+    // 단일 TodoItem 추가
+    public TodoItemDto addSingleTodoItem(TodoItemRequestDto dto, Long userId){
+        User user = userService.getUser(userId);
         DailyTask dailyTask = dailyTaskRepository.findByUserIdAndDate(userId, dto.getDate())
                 .orElseGet(() -> {
-                    DailyTask newTask = DailyTask.builder()
-                            .date(dto.getDate())
-                            .build();
+                    DailyTask newTask = DailyTask.builder().date(dto.getDate()).build();
                     user.addDailyTask(newTask);
                     return newTask;
                 });
 
+        TodoItem todoItem = createAndAddTodoItem(dailyTask, dto, null);
+        return toDto(todoItem);
+    }
+
+    // 루틴에 맞게 TodoItem 추가
+    public void addTodoItemForRoutine(TodoItemRequestDto dto, Long routineId, User user, Map<LocalDate, DailyTask> taskMap){
+        DailyTask dailyTask = taskMap.get(dto.getDate());
+        if(dailyTask == null){
+            DailyTask newTask = DailyTask.builder().date(dto.getDate()).build();
+            user.addDailyTask(newTask);
+
+            taskMap.put(dto.getDate(), newTask);
+            dailyTask = newTask;
+        }
+        createAndAddTodoItem(dailyTask, dto, routineId);
+    }
+
+    private TodoItem createAndAddTodoItem(DailyTask dailyTask, TodoItemRequestDto dto, Long routineId) {
         TodoItem todoItem = TodoItem.builder()
                 .title(dto.getTitle())
                 .isCompleted(false)
@@ -46,14 +63,18 @@ public class DailyTaskService {
                 .build();
 
         dailyTask.addTodoItem(todoItem);
-        return toDto(todoItem);
+        return todoItem;
     }
 
     // 날짜별 TodoItem 리스트 조회
     @Transactional(readOnly = true)
     public DailyTaskDto getDailyTasksByDate(LocalDate date, Long userId){
         DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, date)
-                .orElse(DailyTask.builder().date(date).build());
+                .orElse(null);
+
+        if(task == null){
+            return DailyTaskDto.create(date, List.of());
+        }
         return toDto(task);
     }
 
@@ -79,11 +100,6 @@ public class DailyTaskService {
         validateOwnership(userId, todoItem);
         todoItem.remove(); // 연관관계 정리
         todoItemRepository.deleteById(todoItem.getId());
-    }
-
-    private User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
     }
 
     private TodoItem getTodoItem(Long todoItemId) {

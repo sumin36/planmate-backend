@@ -6,10 +6,9 @@ import com.sumin.planmate.dto.routine.RoutineRequestDto;
 import com.sumin.planmate.dto.routine.RoutineUpdateDto;
 import com.sumin.planmate.entity.*;
 import com.sumin.planmate.exception.NotFoundException;
+import com.sumin.planmate.repository.DailyTaskRepository;
 import com.sumin.planmate.repository.RoutineRepository;
 import com.sumin.planmate.repository.TodoItemRepository;
-import com.sumin.planmate.repository.UserRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,9 @@ import java.time.format.TextStyle;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,19 +31,19 @@ public class RoutineService {
 
     private final RoutineRepository routineRepository;
     private final DailyTaskService dailyTaskService;
+    private final DailyTaskRepository dailyTaskRepository;
     private final TodoItemRepository todoItemRepository;
-    private final UserRepository userRepository;
-    private final EntityManager em;
+    private final UserService userService;
 
     // 루틴 추가
     public void addRoutine(RoutineRequestDto dto, Long userId) {
-        User user = getUser(userId);
-
+        User user = userService.getUser(userId);
         Routine routine = createRoutine(dto);
         user.addRoutine(routine);
-        em.flush();
 
-        createTodoItemsForRoutine(userId, routine);
+        Map<LocalDate, DailyTask> taskMap = getExistingDailyTaskMap(userId, routine.getStartDate(), routine.getEndDate());
+
+        createTodoItemsForRoutine(user, routine, taskMap);
     }
 
     // 루틴 리스트 조회
@@ -67,7 +69,9 @@ public class RoutineService {
                 dto.getMinute()
         );
 
-        createTodoItemsForRoutine(routine.getUser().getId(), routine);
+        Map<LocalDate, DailyTask> taskMap = getExistingDailyTaskMap(userId, routine.getStartDate(), routine.getEndDate());
+
+        createTodoItemsForRoutine(routine.getUser(), routine, taskMap);
         return toDto(routine);
     }
 
@@ -97,13 +101,21 @@ public class RoutineService {
         return routine;
     }
 
+    private Map<LocalDate, DailyTask> getExistingDailyTaskMap(Long userId, LocalDate startDate, LocalDate endDate) {
+        List<DailyTask> tasks = dailyTaskRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
+        return tasks.stream().collect(Collectors.toMap(DailyTask::getDate, Function.identity()));
+    }
+
     // 루틴 설정 기간에 맞게 데일리 태스크에 TodoItem 추가
-    private void createTodoItemsForRoutine(Long userId, Routine routine) {
+    private void createTodoItemsForRoutine(User user, Routine routine, Map<LocalDate, DailyTask> taskMap) {
         LocalDate date = routine.getStartDate();
         while (!date.isAfter(routine.getEndDate())) {
             if (shouldCreateDailyTask(routine, date)) {
-                dailyTaskService.addTodoItem
-                        (TodoItemRequestDto.create(routine.getTitle(), date), routine.getId(), userId);
+                dailyTaskService.addTodoItemForRoutine(
+                        (TodoItemRequestDto.create(routine.getTitle(), date)),
+                        routine.getId(),
+                        user,
+                        taskMap);
             }
             date = date.plusDays(1);
         }
@@ -125,11 +137,6 @@ public class RoutineService {
             default:
                 return false;
         }
-    }
-
-    private User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
     }
 
     private Routine getRoutine(Long routineId) {
