@@ -3,6 +3,8 @@ package com.sumin.planmate.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,7 @@ public class DailyTask extends BaseEntity{
 
     @Builder.Default
     @OneToMany(mappedBy = "dailyTask", cascade = CascadeType.ALL)
+    @BatchSize(size = 100)
     private List<TodoItem> todoItems = new ArrayList<>();
 
     public void addTodoItem(TodoItem todoItem){

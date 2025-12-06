@@ -112,7 +112,7 @@ public class RoutineService {
         while (!date.isAfter(routine.getEndDate())) {
             if (shouldCreateDailyTask(routine, date)) {
                 dailyTaskService.addTodoItemForRoutine(
-                        (TodoItemRequestDto.create(routine.getTitle(), date)),
+                        (TodoItemRequestDto.create(date, routine.getTitle())),
                         routine.getId(),
                         user,
                         taskMap);
