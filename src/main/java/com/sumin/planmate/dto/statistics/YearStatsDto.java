@@ -7,7 +7,7 @@ import java.time.Year;
 
 @Getter
 @SuperBuilder
-public class YearStatsDto extends BaseStatisticsDto{
+public class YearStatsDto extends BaseStatsDto {
     private Year year;
 
     public static YearStatsDto createZeroStats(Year year) {

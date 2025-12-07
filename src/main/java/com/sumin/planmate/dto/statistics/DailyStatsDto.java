@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Getter
 @SuperBuilder
-public class DailyStatsDto extends BaseStatisticsDto{
+public class DailyStatsDto extends BaseStatsDto {
     private LocalDate date;
 
     public static DailyStatsDto createZeroStats(LocalDate date) {

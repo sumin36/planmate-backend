@@ -7,7 +7,7 @@ import java.time.YearMonth;
 
 @Getter
 @SuperBuilder
-public class MonthStatsDto extends BaseStatisticsDto {
+public class MonthStatsDto extends BaseStatsDto {
     private YearMonth yearMonth;
 
     public static MonthStatsDto createZeroStats(YearMonth yearMonth) {

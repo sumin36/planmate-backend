@@ -2,23 +2,32 @@ package com.sumin.planmate.service;
 
 import com.sumin.planmate.dto.statistics.DailyStatsDto;
 import com.sumin.planmate.dto.statistics.MonthStatsDto;
+import com.sumin.planmate.dto.statistics.RoutineStatsDto;
 import com.sumin.planmate.dto.statistics.YearStatsDto;
 import com.sumin.planmate.entity.DailyTask;
+import com.sumin.planmate.entity.Routine;
 import com.sumin.planmate.entity.TodoItem;
 import com.sumin.planmate.repository.DailyTaskRepository;
+import com.sumin.planmate.repository.RoutineRepository;
+import com.sumin.planmate.repository.TodoItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StatisticsService {
 
     private final DailyTaskRepository dailyTaskRepository;
+    private final RoutineRepository routineRepository;
+    private final TodoItemRepository todoItemRepository;
 
     public DailyStatsDto getDailyRate(LocalDate date, Long userId) {
         DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, date).orElse(null);
@@ -91,4 +100,51 @@ public class StatisticsService {
     }
 
     private record StatisticsData(long total, long completed, int rate) {}
+
+    // 루틴별 달성률 리스트 조회
+    public List<RoutineStatsDto> getRoutineRates(Long userId) {
+        List<Routine> routines = routineRepository.findByUserId(userId);
+
+        if(routines.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 모든 루틴별 TodoItem 리스트 가져와서 저장(Map)
+        List<Long> routineIds = routines.stream().map(Routine::getId).toList();
+        List<TodoItem> allRoutineItems = todoItemRepository.findByRoutineIdIn(routineIds);
+
+        Map<Long, List<TodoItem>> todoItemsByRoutineId = allRoutineItems.stream()
+                .collect(Collectors.groupingBy(TodoItem::getRoutineId));
+
+        return routines.stream()
+                .map(routine -> createRoutineStatsDto(
+                        routine,
+                        todoItemsByRoutineId.getOrDefault(routine.getId(), Collections.emptyList())))
+                .toList();
+    }
+
+    private static RoutineStatsDto createRoutineStatsDto(Routine routine, List<TodoItem> items) {
+        Long routineId = routine.getId();
+        String title = routine.getTitle();
+        LocalDate startDate = routine.getStartDate();
+        LocalDate endDate = routine.getEndDate();
+
+        if(items.isEmpty()) {
+            return RoutineStatsDto.createZeroStats(routineId, title, startDate, endDate);
+        } else {
+            long total = items.size();
+            long completed = items.stream().filter(TodoItem::getIsCompleted).count();
+            int rate = (int) (completed * 100 / total);
+
+            return RoutineStatsDto.builder()
+                    .routineId(routineId)
+                    .title(title)
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .rate(rate)
+                    .totalCount(total)
+                    .completedCount(completed)
+                    .build();
+        }
+    }
 }

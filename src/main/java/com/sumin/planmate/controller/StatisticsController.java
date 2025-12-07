@@ -2,6 +2,7 @@ package com.sumin.planmate.controller;
 
 import com.sumin.planmate.dto.statistics.DailyStatsDto;
 import com.sumin.planmate.dto.statistics.MonthStatsDto;
+import com.sumin.planmate.dto.statistics.RoutineStatsDto;
 import com.sumin.planmate.dto.statistics.YearStatsDto;
 import com.sumin.planmate.dto.user.CustomUserDetails;
 import com.sumin.planmate.service.StatisticsService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,5 +45,11 @@ public class StatisticsController {
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
         YearStatsDto dto = statisticsService.getYearlyRate(year, userDetails.getUserId());
         return new ApiResponse<>(200, "연도별 통계 조회 완료", dto);
+    }
+
+    @GetMapping("/routine")
+    public ApiResponse<List<RoutineStatsDto>> getRoutineStats(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<RoutineStatsDto> dtos = statisticsService.getRoutineRates(userDetails.getUserId());
+        return new ApiResponse<>(200, "루틴 통계 리스트 조회 완료", dtos);
     }
 }
