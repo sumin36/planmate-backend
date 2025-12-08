@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -38,12 +39,14 @@ public class DailyTaskService {
                     return newTask;
                 });
 
-        TodoItem todoItem = createAndAddTodoItem(dailyTask, dto, null);
+        TodoItem todoItem = createAndAddTodoItem(dailyTask, dto, null, null);
         return toDto(todoItem);
     }
 
     // 루틴에 맞게 TodoItem 추가
-    public void addTodoItemForRoutine(TodoItemRequestDto dto, Long routineId, User user, Map<LocalDate, DailyTask> taskMap){
+    public void addTodoItemForRoutine(TodoItemRequestDto dto, LocalTime alarmTime, Long routineId,
+                                      User user, Map<LocalDate, DailyTask> taskMap){
+
         DailyTask dailyTask = taskMap.get(dto.getDate());
         if(dailyTask == null){
             DailyTask newTask = DailyTask.builder().date(dto.getDate()).build();
@@ -52,13 +55,15 @@ public class DailyTaskService {
             taskMap.put(dto.getDate(), newTask);
             dailyTask = newTask;
         }
-        createAndAddTodoItem(dailyTask, dto, routineId);
+        createAndAddTodoItem(dailyTask, dto, alarmTime, routineId);
     }
 
-    private TodoItem createAndAddTodoItem(DailyTask dailyTask, TodoItemRequestDto dto, Long routineId) {
+    private TodoItem createAndAddTodoItem(DailyTask dailyTask, TodoItemRequestDto dto,
+                                          LocalTime alarmTime, Long routineId) {
         TodoItem todoItem = TodoItem.builder()
                 .title(dto.getTitle())
                 .isCompleted(false)
+                .alarmTime(alarmTime)
                 .routineId(routineId)
                 .build();
 
@@ -82,7 +87,13 @@ public class DailyTaskService {
     public TodoItemDto updateDailyTask(Long todoItemId, TodoItemUpdateDto dto, Long userId){
         TodoItem todoItem = getTodoItem(todoItemId);
         validateOwnership(userId, todoItem);
-        TodoItem updated = todoItem.update(dto.getTitle(), dto.getMemo());
+
+        LocalTime alarmTime = null;
+        if (dto.getHour() != null && dto.getMinute() != null) {
+            alarmTime = LocalTime.of(dto.getHour(), dto.getMinute());
+        }
+
+        TodoItem updated = todoItem.update(dto.getTitle(), dto.getMemo(), alarmTime);
         return toDto(updated);
     }
 
@@ -128,6 +139,7 @@ public class DailyTaskService {
                 .title(todoItem.getTitle())
                 .memo(todoItem.getMemo())
                 .isCompleted(todoItem.getIsCompleted())
+                .alarmTime(todoItem.getAlarmTime())
                 .routineId(todoItem.getRoutineId())
                 .build();
     }

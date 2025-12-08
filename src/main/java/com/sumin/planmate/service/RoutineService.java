@@ -92,7 +92,6 @@ public class RoutineService {
                 .repeatType(dto.getRepeatType())
                 .repeatDescription(dto.getRepeatType() == RepeatType.DAILY ? null : dto.getRepeatDescription())
                 .alarmTime(dto.getHour() != null && dto.getMinute() != null ? LocalTime.of(dto.getHour(), dto.getMinute()) : null)
-                .isActive(true)
                 .build();
 
         // 검증
@@ -113,6 +112,7 @@ public class RoutineService {
             if (shouldCreateDailyTask(routine, date)) {
                 dailyTaskService.addTodoItemForRoutine(
                         (TodoItemRequestDto.create(date, routine.getTitle())),
+                        routine.getAlarmTime(),
                         routine.getId(),
                         user,
                         taskMap);
@@ -159,7 +159,6 @@ public class RoutineService {
                 .repeatType(routine.getRepeatType())
                 .repeatDescription(routine.getRepeatDescription())
                 .alarmTime(routine.getAlarmTime())
-                .isActive(routine.isActive())
                 .build();
     }
 }

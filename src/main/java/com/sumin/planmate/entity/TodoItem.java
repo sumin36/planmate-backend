@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.time.LocalTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,6 +20,7 @@ public class TodoItem extends BaseEntity{
     private String title;
     private String memo;
     private Boolean isCompleted;
+    private LocalTime alarmTime;
     private Long routineId;
 
     @Setter
@@ -25,9 +28,10 @@ public class TodoItem extends BaseEntity{
     @JoinColumn(name = "daily_task_id")
     private DailyTask dailyTask;
 
-    public TodoItem update(String title, String memo) {
+    public TodoItem update(String title, String memo, LocalTime alarmTime) {
         if(title != null) this.title = title;
         if(memo != null) this.memo = memo;
+        if(alarmTime != null) this.alarmTime = alarmTime;
         return this;
     }
 

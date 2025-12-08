@@ -35,7 +35,6 @@ public class Routine extends BaseEntity {
     private RepeatType repeatType = RepeatType.DAILY;
     private String repeatDescription;
     private LocalTime alarmTime;
-    private boolean isActive = true;
 
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)

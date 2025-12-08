@@ -25,7 +25,7 @@ public class DailyTaskController {
     public ApiResponse<TodoItemDto> createTodoItem(@Valid @RequestBody TodoItemRequestDto dto,
                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
         TodoItemDto task = dailyTaskService.addSingleTodoItem(dto, userDetails.getUserId());
-        return new ApiResponse<>(200, "task 추가 완료", task);
+        return new ApiResponse<>(200, "todoItem 추가 완료", task);
     }
 
     @GetMapping
@@ -36,25 +36,25 @@ public class DailyTaskController {
         return new ApiResponse<>(200, "daily task 조회 완료", tasks);
     }
 
-    @PutMapping("/{taskId}")
-    public ApiResponse<TodoItemDto> updateTodoItem(@PathVariable Long taskId,
+    @PutMapping("/{itemId}")
+    public ApiResponse<TodoItemDto> updateTodoItem(@PathVariable Long itemId,
                                                    @Valid @RequestBody TodoItemUpdateDto dto,
                                                    @AuthenticationPrincipal CustomUserDetails userDetails){
-        TodoItemDto updated = dailyTaskService.updateDailyTask(taskId, dto, userDetails.getUserId());
-        return new ApiResponse<>(200, "task 업데이트 완료", updated);
+        TodoItemDto updated = dailyTaskService.updateDailyTask(itemId, dto, userDetails.getUserId());
+        return new ApiResponse<>(200, "todoItem 업데이트 완료", updated);
     }
 
-    @PatchMapping("/{taskId}/toggle")
-    private ApiResponse<TodoItemDto> toggleTodoItem(@PathVariable Long taskId,
+    @PatchMapping("/{itemId}/toggle")
+    private ApiResponse<TodoItemDto> toggleTodoItem(@PathVariable Long itemId,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails){
-        TodoItemDto task = dailyTaskService.toggleComplete(taskId, userDetails.getUserId());
-        return new ApiResponse<>(200, "task 상태 업데이트 완료", task);
+        TodoItemDto task = dailyTaskService.toggleComplete(itemId, userDetails.getUserId());
+        return new ApiResponse<>(200, "todoItem 상태 업데이트 완료", task);
     }
 
-    @DeleteMapping("/{taskId}")
-    public ApiResponse<String> deleteTodoItem(@PathVariable Long taskId,
+    @DeleteMapping("/{itemId}")
+    public ApiResponse<String> deleteTodoItem(@PathVariable Long itemId,
                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
-        dailyTaskService.removeTodoItem(taskId, userDetails.getUserId());
-        return new ApiResponse<>(200, "task 삭제 완료", null);
+        dailyTaskService.removeTodoItem(itemId, userDetails.getUserId());
+        return new ApiResponse<>(200, "todoItem 삭제 완료", null);
     }
 }
