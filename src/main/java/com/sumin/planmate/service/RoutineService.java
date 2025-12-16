@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Arrays;
 import java.util.List;
@@ -59,14 +61,18 @@ public class RoutineService {
         validateOwnership(userId, routine);
         todoItemRepository.deleteByRoutineId(routineId); // 기존 루틴 기반 TodoItem 삭제
 
+        LocalTime alarmTime = null;
+        if (dto.getHour() != null && dto.getMinute() != null) {
+            alarmTime = LocalTime.of(dto.getHour(), dto.getMinute());
+        }
+
         routine.updateRoutine(
                 dto.getTitle(),
                 dto.getStartDate(),
                 dto.getEndDate(),
                 dto.getRepeatType(),
                 dto.getRepeatDescription(),
-                dto.getHour(),
-                dto.getMinute()
+                alarmTime
         );
 
         Map<LocalDate, DailyTask> taskMap = getExistingDailyTaskMap(userId, routine.getStartDate(), routine.getEndDate());
@@ -130,10 +136,16 @@ public class RoutineService {
                 String day = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
                 return dayOfWeeks.contains(day);
             case MONTHLY:
-                List<Integer> days = Arrays.stream(routine.getRepeatDescription().split(","))
+                List<Integer> mDays = Arrays.stream(routine.getRepeatDescription().split(","))
                         .map(Integer::parseInt)
                         .toList();
-                return days.contains(date.getDayOfMonth());
+                return mDays.contains(date.getDayOfMonth());
+            case YEARLY:
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
+                List<MonthDay> yDays = Arrays.stream(routine.getRepeatDescription().split(","))
+                        .map(d -> MonthDay.parse(d, formatter))
+                        .toList();
+                return yDays.contains(MonthDay.from(date));
             default:
                 return false;
         }

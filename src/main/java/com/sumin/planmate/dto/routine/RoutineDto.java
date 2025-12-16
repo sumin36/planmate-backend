@@ -17,5 +17,4 @@ public class RoutineDto {
     private RepeatType repeatType;
     private String repeatDescription;
     private LocalTime alarmTime;
-    private boolean isActive;
 }

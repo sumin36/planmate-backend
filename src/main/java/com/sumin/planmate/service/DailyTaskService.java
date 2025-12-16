@@ -1,9 +1,6 @@
 package com.sumin.planmate.service;
 
-import com.sumin.planmate.dto.dailytask.DailyTaskDto;
-import com.sumin.planmate.dto.dailytask.TodoItemRequestDto;
-import com.sumin.planmate.dto.dailytask.TodoItemUpdateDto;
-import com.sumin.planmate.dto.dailytask.TodoItemDto;
+import com.sumin.planmate.dto.dailytask.*;
 import com.sumin.planmate.entity.DailyTask;
 import com.sumin.planmate.entity.TodoItem;
 import com.sumin.planmate.entity.User;
@@ -40,7 +37,9 @@ public class DailyTaskService {
                 });
 
         TodoItem todoItem = createAndAddTodoItem(dailyTask, dto, null, null);
-        return toDto(todoItem);
+
+        TodoItem savedTodoItem = todoItemRepository.save(todoItem);
+        return toDto(savedTodoItem);
     }
 
     // 루틴에 맞게 TodoItem 추가
@@ -88,12 +87,20 @@ public class DailyTaskService {
         TodoItem todoItem = getTodoItem(todoItemId);
         validateOwnership(userId, todoItem);
 
+        TodoItem updated = todoItem.updateContent(dto.getTitle(), dto.getMemo());
+        return toDto(updated);
+    }
+
+    // TodoItem 알람 시간 수정
+    public TodoItemDto updateAlarmTime(Long todoItemId, TodoAlarmUpdateDto dto, Long userId){
+        TodoItem todoItem = getTodoItem(todoItemId);
+        validateOwnership(userId, todoItem);
+
         LocalTime alarmTime = null;
         if (dto.getHour() != null && dto.getMinute() != null) {
             alarmTime = LocalTime.of(dto.getHour(), dto.getMinute());
         }
-
-        TodoItem updated = todoItem.update(dto.getTitle(), dto.getMemo(), alarmTime);
+        TodoItem updated = todoItem.updateAlarmTime(alarmTime);
         return toDto(updated);
     }
 

@@ -1,9 +1,6 @@
 package com.sumin.planmate.controller;
 
-import com.sumin.planmate.dto.dailytask.DailyTaskDto;
-import com.sumin.planmate.dto.dailytask.TodoItemRequestDto;
-import com.sumin.planmate.dto.dailytask.TodoItemUpdateDto;
-import com.sumin.planmate.dto.dailytask.TodoItemDto;
+import com.sumin.planmate.dto.dailytask.*;
 import com.sumin.planmate.dto.user.CustomUserDetails;
 import com.sumin.planmate.service.DailyTaskService;
 import com.sumin.planmate.util.ApiResponse;
@@ -11,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDate;
 
 @RestController
@@ -38,10 +34,18 @@ public class DailyTaskController {
 
     @PutMapping("/{itemId}")
     public ApiResponse<TodoItemDto> updateTodoItem(@PathVariable Long itemId,
-                                                   @Valid @RequestBody TodoItemUpdateDto dto,
+                                                   @RequestBody TodoItemUpdateDto dto,
                                                    @AuthenticationPrincipal CustomUserDetails userDetails){
         TodoItemDto updated = dailyTaskService.updateDailyTask(itemId, dto, userDetails.getUserId());
         return new ApiResponse<>(200, "todoItem 업데이트 완료", updated);
+    }
+
+    @PatchMapping("/{itemId}/alarm")
+    public ApiResponse<TodoItemDto> updateTodoItemAlarmTime(@PathVariable Long itemId,
+                                                            @Valid @RequestBody TodoAlarmUpdateDto dto,
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails){
+        TodoItemDto updated = dailyTaskService.updateAlarmTime(itemId, dto, userDetails.getUserId());
+        return new ApiResponse<>(200, "todoItem 알람 업데이트 완료", updated);
     }
 
     @PatchMapping("/{itemId}/toggle")

@@ -42,7 +42,7 @@ public class Routine extends BaseEntity {
     User user;
 
     public void updateRoutine (String title, LocalDate startDate, LocalDate endDate, RepeatType repeatType,
-                               String repeatDescription, Integer hour, Integer minute) {
+                               String repeatDescription, LocalTime alarmTime) {
         if(title != null) this.title = title;
         if(startDate != null) this.startDate = startDate;
         if(endDate != null) this.endDate = endDate;
@@ -51,12 +51,10 @@ public class Routine extends BaseEntity {
             if (repeatType == RepeatType.DAILY) this.repeatDescription = null;
             else if (repeatDescription != null) this.repeatDescription = repeatDescription;
         }
-
-        if(hour != null && minute != null) this.alarmTime = LocalTime.of(hour, minute);
+        this.alarmTime = alarmTime;
 
         validateDates();
         validateRepeat();
-
     }
 
     public void validateDates() {
