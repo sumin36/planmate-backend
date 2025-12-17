@@ -28,19 +28,17 @@ public class TodoItem extends BaseEntity{
     @JoinColumn(name = "daily_task_id")
     private DailyTask dailyTask;
 
-    public TodoItem updateContent(String title, String memo) {
+    public void updateContent(String title, String memo) {
         if(title != null) this.title = title;
         if(memo != null) this.memo = memo;
-        return this;
     }
 
-    public TodoItem updateAlarmTime(LocalTime alarmTime) {
+    public void updateAlarmTime(LocalTime alarmTime) {
         this.alarmTime = alarmTime;
-        return this;
     }
 
-    public void setComplete(boolean complete) {
-        this.isCompleted = complete;
+    public void toggleCompletion() {
+        this.isCompleted = !this.isCompleted;
     }
 
     public void remove(){

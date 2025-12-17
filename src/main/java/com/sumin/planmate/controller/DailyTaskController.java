@@ -28,7 +28,7 @@ public class DailyTaskController {
     public ApiResponse<DailyTaskDto> getDailyTasksByDate(@RequestParam(required = false) LocalDate date,
                                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
         if(date == null) date = LocalDate.now();
-        DailyTaskDto tasks = dailyTaskService.getDailyTasksByDate(date, userDetails.getUserId());
+        DailyTaskDto tasks = dailyTaskService.getDailyTaskByDate(date, userDetails.getUserId());
         return new ApiResponse<>(200, "daily task 조회 완료", tasks);
     }
 
@@ -36,7 +36,7 @@ public class DailyTaskController {
     public ApiResponse<TodoItemDto> updateTodoItem(@PathVariable Long itemId,
                                                    @RequestBody TodoItemUpdateDto dto,
                                                    @AuthenticationPrincipal CustomUserDetails userDetails){
-        TodoItemDto updated = dailyTaskService.updateDailyTask(itemId, dto, userDetails.getUserId());
+        TodoItemDto updated = dailyTaskService.updateTodoItem(itemId, dto, userDetails.getUserId());
         return new ApiResponse<>(200, "todoItem 업데이트 완료", updated);
     }
 

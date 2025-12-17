@@ -22,14 +22,14 @@ public class UserService {
     public UserInfoDto updateUserInfo(UserUpdateDto dto, Long userId) {
         User user = getUser(userId);
         user.updateUserInfo(dto.getFullName(), dto.getEmail(), dto.getGender(), dto.getBirthDate());
-        return toDto(user);
+        return UserInfoDto.from(user);
     }
 
     // 유저 정보 조회
     @Transactional(readOnly = true)
     public UserInfoDto getUserInfo(Long userId){
         User user = getUser(userId);
-        return toDto(user);
+        return UserInfoDto.from(user);
     }
 
     // 비밀번호 변경
@@ -44,15 +44,5 @@ public class UserService {
     public User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 사용자입니다."));
-    }
-
-    private UserInfoDto toDto(User user) {
-        return UserInfoDto.builder()
-                .username(user.getUsername())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .gender(user.getGender())
-                .birthDate(user.getBirthDate())
-                .build();
     }
 }

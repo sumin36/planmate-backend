@@ -36,10 +36,10 @@ public class DailyTaskService {
                     return newTask;
                 });
 
-        TodoItem todoItem = createAndAddTodoItem(dailyTask, dto, null, null);
-
-        TodoItem savedTodoItem = todoItemRepository.save(todoItem);
-        return toDto(savedTodoItem);
+        TodoItem todoItem = createTodo(dto);
+        dailyTask.addTodoItem(todoItem);
+        todoItemRepository.save(todoItem);
+        return TodoItemDto.from(todoItem);
     }
 
     // 루틴에 맞게 TodoItem 추가
@@ -48,47 +48,35 @@ public class DailyTaskService {
 
         DailyTask dailyTask = taskMap.get(dto.getDate());
         if(dailyTask == null){
-            DailyTask newTask = DailyTask.builder().date(dto.getDate()).build();
-            user.addDailyTask(newTask);
+            dailyTask = DailyTask.builder().date(dto.getDate()).build();
 
-            taskMap.put(dto.getDate(), newTask);
-            dailyTask = newTask;
+            user.addDailyTask(dailyTask);
+            taskMap.put(dto.getDate(), dailyTask);
         }
-        createAndAddTodoItem(dailyTask, dto, alarmTime, routineId);
-    }
-
-    private TodoItem createAndAddTodoItem(DailyTask dailyTask, TodoItemRequestDto dto,
-                                          LocalTime alarmTime, Long routineId) {
-        TodoItem todoItem = TodoItem.builder()
-                .title(dto.getTitle())
-                .isCompleted(false)
-                .alarmTime(alarmTime)
-                .routineId(routineId)
-                .build();
-
+        TodoItem todoItem = createRoutineTodo(dto, alarmTime, routineId);
         dailyTask.addTodoItem(todoItem);
-        return todoItem;
     }
 
     // 날짜별 TodoItem 리스트 조회
     @Transactional(readOnly = true)
-    public DailyTaskDto getDailyTasksByDate(LocalDate date, Long userId){
+    public DailyTaskDto getDailyTaskByDate(LocalDate date, Long userId){
         DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, date)
                 .orElse(null);
 
         if(task == null){
-            return DailyTaskDto.create(date, List.of());
+            return DailyTaskDto.of(date, List.of());
         }
-        return toDto(task);
+        return DailyTaskDto.from(task);
     }
 
     // TodoItem 수정
-    public TodoItemDto updateDailyTask(Long todoItemId, TodoItemUpdateDto dto, Long userId){
+    public TodoItemDto updateTodoItem(Long todoItemId, TodoItemUpdateDto dto, Long userId){
         TodoItem todoItem = getTodoItem(todoItemId);
         validateOwnership(userId, todoItem);
 
-        TodoItem updated = todoItem.updateContent(dto.getTitle(), dto.getMemo());
-        return toDto(updated);
+        todoItem.updateContent(dto.getTitle(), dto.getMemo());
+
+        return TodoItemDto.from(todoItem);
     }
 
     // TodoItem 알람 시간 수정
@@ -100,16 +88,17 @@ public class DailyTaskService {
         if (dto.getHour() != null && dto.getMinute() != null) {
             alarmTime = LocalTime.of(dto.getHour(), dto.getMinute());
         }
-        TodoItem updated = todoItem.updateAlarmTime(alarmTime);
-        return toDto(updated);
+        todoItem.updateAlarmTime(alarmTime);
+
+        return TodoItemDto.from(todoItem);
     }
 
     // TodoItem 상태 변경
     public TodoItemDto toggleComplete(Long todoItemId, Long userId){
         TodoItem todoItem = getTodoItem(todoItemId);
         validateOwnership(userId, todoItem);
-        todoItem.setComplete(!todoItem.getIsCompleted());
-        return toDto(todoItem);
+        todoItem.toggleCompletion();
+        return TodoItemDto.from(todoItem);
     }
 
     // TodoItem 삭제
@@ -117,7 +106,23 @@ public class DailyTaskService {
         TodoItem todoItem = getTodoItem(todoItemId);
         validateOwnership(userId, todoItem);
         todoItem.remove(); // 연관관계 정리
-        todoItemRepository.deleteById(todoItem.getId());
+        todoItemRepository.delete(todoItem);
+    }
+
+    private TodoItem createTodo(TodoItemRequestDto dto){
+        return TodoItem.builder()
+                .title(dto.getTitle())
+                .isCompleted(false)
+                .build();
+    }
+
+    private TodoItem createRoutineTodo(TodoItemRequestDto dto, LocalTime alarmTime, Long routineId) {
+        return TodoItem.builder()
+                .title(dto.getTitle())
+                .isCompleted(false)
+                .alarmTime(alarmTime)
+                .routineId(routineId)
+                .build();
     }
 
     private TodoItem getTodoItem(Long todoItemId) {
@@ -126,28 +131,8 @@ public class DailyTaskService {
     }
 
     private void validateOwnership(Long userId, TodoItem todoItem) {
-        if(!todoItem.getDailyTask().getUser().getId().equals(userId)){
+        if (!todoItem.getDailyTask().getUser().getId().equals(userId)) {
             throw new AccessDeniedException("접근 권한이 없습니다.");
         }
-    }
-
-    private DailyTaskDto toDto(DailyTask dailyTask) {
-        return DailyTaskDto.create(
-                dailyTask.getDate(),
-                dailyTask.getTodoItems().stream()
-                        .map(this::toDto)
-                        .toList()
-        );
-    }
-
-    private TodoItemDto toDto(TodoItem todoItem){
-        return TodoItemDto.builder()
-                .id(todoItem.getId())
-                .title(todoItem.getTitle())
-                .memo(todoItem.getMemo())
-                .isCompleted(todoItem.getIsCompleted())
-                .alarmTime(todoItem.getAlarmTime())
-                .routineId(todoItem.getRoutineId())
-                .build();
     }
 }

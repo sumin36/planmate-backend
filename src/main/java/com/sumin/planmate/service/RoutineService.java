@@ -19,10 +19,7 @@ import java.time.LocalTime;
 import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,7 +37,7 @@ public class RoutineService {
     // 루틴 추가
     public void addRoutine(RoutineRequestDto dto, Long userId) {
         User user = userService.getUser(userId);
-        Routine routine = createRoutine(dto);
+        Routine routine = Routine.from(dto);
         user.addRoutine(routine);
 
         Map<LocalDate, DailyTask> taskMap = getExistingDailyTaskMap(userId, routine.getStartDate(), routine.getEndDate());
@@ -52,7 +49,7 @@ public class RoutineService {
     @Transactional(readOnly = true)
     public List<RoutineDto> getRoutines(Long userId) {
         List<Routine> routines = routineRepository.findByUserId(userId);
-        return routines.stream().map(this::toDto).toList();
+        return routines.stream().map(RoutineDto::from).toList();
     }
 
     // 루틴 수정
@@ -78,7 +75,7 @@ public class RoutineService {
         Map<LocalDate, DailyTask> taskMap = getExistingDailyTaskMap(userId, routine.getStartDate(), routine.getEndDate());
 
         createTodoItemsForRoutine(routine.getUser(), routine, taskMap);
-        return toDto(routine);
+        return RoutineDto.from(routine);
     }
 
     // 루틴 삭제
@@ -87,23 +84,6 @@ public class RoutineService {
         validateOwnership(userId, routine);
         todoItemRepository.deleteFutureTodoItems(routineId, LocalDate.now());
         routineRepository.delete(routine);
-    }
-
-    // 루틴 생성
-    private Routine createRoutine(RoutineRequestDto dto) {
-        Routine routine = Routine.builder()
-                .title(dto.getTitle())
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
-                .repeatType(dto.getRepeatType())
-                .repeatDescription(dto.getRepeatType() == RepeatType.DAILY ? null : dto.getRepeatDescription())
-                .alarmTime(dto.getHour() != null && dto.getMinute() != null ? LocalTime.of(dto.getHour(), dto.getMinute()) : null)
-                .build();
-
-        // 검증
-        routine.validateDates();
-        routine.validateRepeat();
-        return routine;
     }
 
     private Map<LocalDate, DailyTask> getExistingDailyTaskMap(Long userId, LocalDate startDate, LocalDate endDate) {
@@ -160,17 +140,5 @@ public class RoutineService {
         if(!routine.getUser().getId().equals(userId)){
             throw new AccessDeniedException("접근 권한이 없습니다.");
         }
-    }
-
-    private RoutineDto toDto(Routine routine) {
-        return RoutineDto.builder()
-                .routineId(routine.getId())
-                .title(routine.getTitle())
-                .startDate(routine.getStartDate())
-                .endDate(routine.getEndDate())
-                .repeatType(routine.getRepeatType())
-                .repeatDescription(routine.getRepeatDescription())
-                .alarmTime(routine.getAlarmTime())
-                .build();
     }
 }

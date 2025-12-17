@@ -30,22 +30,9 @@ public class StatisticsService {
     private final TodoItemRepository todoItemRepository;
 
     public DailyStatsDto getDailyRate(LocalDate date, Long userId) {
-        DailyTask task = dailyTaskRepository.findByUserIdAndDate(userId, date).orElse(null);
-
-        if(task == null) {
-            return DailyStatsDto.createZeroStats(date);
-        }
-
-        long total = task.getTodoItems().size();
-        long completed = task.getTodoItems().stream().filter(TodoItem::getIsCompleted).count();
-        int rate = total == 0 ? 0 : (int) (completed * 100 / total);
-
-        return DailyStatsDto.builder()
-                .date(date)
-                .rate(rate)
-                .totalCount(total)
-                .completedCount(completed)
-                .build();
+        return dailyTaskRepository.findByUserIdAndDate(userId, date)
+                .map(DailyStatsDto::from)
+                .orElse(DailyStatsDto.builder().date(date).build());
     }
 
     public MonthStatsDto getMonthlyRate(YearMonth yearMonth, Long userId) {
@@ -55,17 +42,11 @@ public class StatisticsService {
         List<DailyTask> tasks = dailyTaskRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         
         if(tasks.isEmpty()) {
-           return MonthStatsDto.createZeroStats(yearMonth);
+           return MonthStatsDto.of(yearMonth, 0, 0, 0);
         }
 
-        StatisticsData data = calculateStatistics(tasks);
-
-        return MonthStatsDto.builder()
-                .yearMonth(yearMonth)
-                .rate(data.rate())
-                .totalCount(data.total())
-                .completedCount(data.completed())
-                .build();
+        StatisticsData data = StatisticsData.of(tasks);
+        return MonthStatsDto.of(yearMonth, data.total, data.completed, data.rate);
     }
 
     public YearStatsDto getYearlyRate(Year year, Long userId) {
@@ -74,32 +55,12 @@ public class StatisticsService {
 
         List<DailyTask> tasks = dailyTaskRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
         if(tasks.isEmpty()) {
-            return YearStatsDto.createZeroStats(year);
+            return YearStatsDto.of(year, 0, 0, 0);
         }
 
-        StatisticsData data = calculateStatistics(tasks);
-
-        return YearStatsDto.builder()
-                .year(year)
-                .rate(data.rate())
-                .totalCount(data.total())
-                .completedCount(data.completed())
-                .build();
+        StatisticsData data = StatisticsData.of(tasks);
+        return YearStatsDto.of(year, data.total, data.completed, data.rate);
     }
-
-    private StatisticsData calculateStatistics(List<DailyTask> tasks) {
-        long total = tasks.stream()
-                .mapToLong(task -> task.getTodoItems().size())
-                .sum();
-        long completed = tasks.stream()
-                .mapToLong(task -> task.getTodoItems().stream().filter(TodoItem::getIsCompleted).count())
-                .sum();
-
-        int rate = total == 0 ? 0 : (int) (completed * 100 / total);
-        return new StatisticsData(total, completed, rate);
-    }
-
-    private record StatisticsData(long total, long completed, int rate) {}
 
     // 루틴별 달성률 리스트 조회
     public List<RoutineStatsDto> getRoutineRates(Long userId) {
@@ -117,34 +78,25 @@ public class StatisticsService {
                 .collect(Collectors.groupingBy(TodoItem::getRoutineId));
 
         return routines.stream()
-                .map(routine -> createRoutineStatsDto(
+                .map(routine -> RoutineStatsDto.from(
                         routine,
                         todoItemsByRoutineId.getOrDefault(routine.getId(), Collections.emptyList())))
                 .toList();
     }
 
-    private static RoutineStatsDto createRoutineStatsDto(Routine routine, List<TodoItem> items) {
-        Long routineId = routine.getId();
-        String title = routine.getTitle();
-        LocalDate startDate = routine.getStartDate();
-        LocalDate endDate = routine.getEndDate();
+    // 통계 데이터(전체 개수, 완료 개수, 달성률)
+    private record StatisticsData(long total, long completed, int rate) {
+        public static StatisticsData of(List<DailyTask> tasks) {
+            long total = tasks.stream()
+                    .mapToLong(task -> task.getTodoItems().size())
+                    .sum();
+            long completed = tasks.stream()
+                    .mapToLong(task -> task.getTodoItems().stream()
+                            .filter(TodoItem::getIsCompleted).count())
+                    .sum();
+            int rate = total == 0 ? 0 : (int) (completed * 100 / total);
 
-        if(items.isEmpty()) {
-            return RoutineStatsDto.createZeroStats(routineId, title, startDate, endDate);
-        } else {
-            long total = items.size();
-            long completed = items.stream().filter(TodoItem::getIsCompleted).count();
-            int rate = (int) (completed * 100 / total);
-
-            return RoutineStatsDto.builder()
-                    .routineId(routineId)
-                    .title(title)
-                    .startDate(startDate)
-                    .endDate(endDate)
-                    .rate(rate)
-                    .totalCount(total)
-                    .completedCount(completed)
-                    .build();
+            return new StatisticsData(total, completed, rate);
         }
     }
 }

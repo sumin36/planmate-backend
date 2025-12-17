@@ -2,7 +2,6 @@ package com.sumin.planmate.dto.statistics;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
-
 import java.time.Year;
 
 @Getter
@@ -10,12 +9,12 @@ import java.time.Year;
 public class YearStatsDto extends BaseStatsDto {
     private Year year;
 
-    public static YearStatsDto createZeroStats(Year year) {
+    public static YearStatsDto of(Year year, long total, long completed, int rate) {
         return YearStatsDto.builder()
                 .year(year)
-                .rate(0)
-                .totalCount(0)
-                .completedCount(0)
+                .rate(rate)
+                .totalCount(total)
+                .completedCount(completed)
                 .build();
     }
 }
