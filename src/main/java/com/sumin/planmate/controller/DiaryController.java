@@ -6,6 +6,7 @@ import com.sumin.planmate.dto.diary.DiaryUpdateDto;
 import com.sumin.planmate.dto.user.CustomUserDetails;
 import com.sumin.planmate.service.DiaryService;
 import com.sumin.planmate.util.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +21,7 @@ public class DiaryController {
 
     private final DiaryService diaryService;
 
+    @Operation(summary = "일기 작성", description = "특정 날짜의 일기를 작성합니다.")
     @PostMapping
     public ApiResponse<DiaryDto> createDiary(@Valid @RequestBody DiaryRequestDto dto,
                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -27,6 +29,7 @@ public class DiaryController {
         return new ApiResponse<>(200, "일기 추가 완료", diary);
     }
 
+    @Operation(summary = "일기 조회", description = "특정 날짜의 일기를 조회합니다.")
     @GetMapping
     public ApiResponse<DiaryDto> getDiary(LocalDate date,
                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -34,6 +37,7 @@ public class DiaryController {
         return new ApiResponse<>(200, "일기 조회 완료", diary);
     }
 
+    @Operation(summary = "일기 수정", description = "특정 날짜의 일기를 수정합니다.")
     @PutMapping("/{diaryId}")
     public ApiResponse<DiaryDto> updateDiary(@PathVariable Long diaryId,
                                              @Valid @RequestBody DiaryUpdateDto dto,
@@ -42,6 +46,7 @@ public class DiaryController {
         return new ApiResponse<>(200, "일기 수정 완료", diary);
     }
 
+    @Operation(summary = "일기 삭제", description = "특정 날짜의 일기를 삭제합니다.")
     @DeleteMapping("/{diaryId}")
     public ApiResponse<String> deleteDiary(@PathVariable Long diaryId,
                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
