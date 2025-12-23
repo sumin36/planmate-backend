@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # 데이터베이스 설정
+  db:
+    image: mysql:8.0
+    container_name: planmate-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: planmate
+      MYSQL_ROOT_PASSWORD: test1234
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+  # 스프링 부트 앱 설정
+  app:
+    build: .
+    container_name: planmate-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    depends_on:
+      db:
+        condition: service_healthy # DB가 먼저 완전히 켜진 후 앱 실행
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/planmate?serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: test1234

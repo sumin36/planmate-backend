@@ -2,9 +2,11 @@ package com.sumin.planmate.dto.diary;
 
 import com.sumin.planmate.entity.Diary;
 import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDate;
 
+@Getter
 @Builder
 public class DiaryDto {
     private Long DiaryId;

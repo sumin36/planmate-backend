@@ -40,9 +40,11 @@ public class User extends BaseEntity {
 
     private LocalDate birthDate;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<DailyTask> dailyTasks = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Routine> routines = new ArrayList<>();
 

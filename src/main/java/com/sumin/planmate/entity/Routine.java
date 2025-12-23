@@ -31,9 +31,11 @@ public class Routine extends BaseEntity {
     @NotNull
     private LocalDate endDate;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @NotNull
     private RepeatType repeatType = RepeatType.DAILY;
+
     private String repeatDescription;
     private LocalTime alarmTime;
 
