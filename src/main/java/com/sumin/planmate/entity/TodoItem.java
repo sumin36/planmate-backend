@@ -14,6 +14,7 @@ import java.time.LocalTime;
 public class TodoItem extends BaseEntity{
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "todo_item_id")
     private Long id;
 
     @NotBlank

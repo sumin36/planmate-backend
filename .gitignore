@@ -40,3 +40,5 @@ out/
 
 # Spring Boot config
 application*.yml
+
+planmate-fcm-firebase-service-key.json

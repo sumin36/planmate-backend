@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class Diary extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "diary_id")
     private Long id;
 
     @Column(nullable = false)
